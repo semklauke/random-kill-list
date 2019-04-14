@@ -1,3 +1,10 @@
+--[[
+    Sem Klauke, 2019
+    Random Kill List, Gary's Mod, TTT
+
+    Main file, starting point
+]]--
+
 local sqlite3 = require("lsqlite3complete")
 
 local config = require("config")
@@ -14,6 +21,9 @@ local VOTE_COUNTS = {}
 local TRAITOR_KILLERS = {}
 local MESSAGES = {}
 
+
+-- logging --
+local logging = require("logging")
 
 -- helper functionn --
 
@@ -96,13 +106,104 @@ local function net_finishVoteFor(steamid)
 
 end
 
+
 -- database maniplulation --
+
+-- statements 
+local statements = {}
+-- :steam (SteamID of player)
+statements.user_select = database:prepare("SELECT rec_id, steam_id, current_nick FROM player WHERE steam_id = :steam;")
+if not statements.user_select then logging.error.statement_create("user_select", database:errmsg())
+
+-- :ply (player_id of player)
+statements.user_register = database:prepare("INSERT INTO rounds_played (player_id) VLAUES (:ply);")
+if not statements.user_register then logging.error.statement_create("user_register", database:errmsg())
+
+-- :steam (SteamID of new player), :nick (current Nickname of new player0)
+statements.user_add = database:prepare("INSERT INTO player (steam_id, current_nick) VALUES (:steam, :nick);")
+if not statements.user_add then logging.error.statement_create("user_add", database:errmsg())
+
+-- :ply (player_id of player)
+statements.user_update = database:prepare("UPDATE player SET current_nick = :nick WHERE rec_id = :ply;")
+if not statements.user_update then logging.error.statement_create("user_update", database:errmsg())
+
+-- :attacker (player_id of attacker), :victim (player_id of victim)
+statements.random_kill_add = database:prepare([[
+    INSERT INTO random_kills (attacker_id, victim_id) VALUES ( 
+    (SELECT rec_id FROM player WHERE steam_id = :attacker),
+    (SELECT rec_id FROM player WHERE steam_id = :victim));
+]])
+if not statements.random_kill_add then logging.error.statement_create("random_kill_add", database:errmsg())
+
+
+local function db_registerPlayer(ply)
+    if isBotOrNil_Player(ply) then return end
+
+    checkDB()
+
+    statements.user_select:bind_names({ steam = ply:SteamID() })
+    local user_select_return = statements.user_select:step() 
+
+    if user_select_return == sqlite3.ROW then
+
+        -- player already in database
+        local user = get_uvalues()
+        statements.user_update:bind_names({ ply = user.rec_id })
+        if not statements.user_update:step() == sqlite3.DONE then
+            logging.error.statement_execute("user_update", database:errmsg())
+        end
+        statements.user_update:reset()
+
+    elseif user_select_return == sqlite3.DONE then
+
+        -- player is not in database yet
+        statements.user_add:bind_names({ steam = ply:SteamID(), nick = ply:Nick() })
+        if not statements.user_add:step() == sqlite3.DONE then
+            logging.error.statement_execute("user_add", database:errmsg())
+        end
+        statements.user_add:reset()
+
+    else
+        -- error occured
+        logging.error.statement_execute("user_select", database;errmsg())
+    end
+
+    statements.user_select:reset()
+    
+end
+
 
 -- game hooks -- 
 
 -- sqlite setup --
 
-local sqlitesetup -- = require("setup-sqlite")
---sqlitesetup.setup(database)
+local sqlitesetup = require("init-database")
+sqlitesetup.init(database)
+logging.out("Database initialised")
 
 -- timer setup --
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
