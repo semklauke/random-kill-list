@@ -1,6 +1,7 @@
 --[[
     Sem Klauke, 2019
-
+    Random Kill List, Gary's Mod, TTT
+    
     Global variables and settings
 ]]--
 local config = {}
