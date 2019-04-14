@@ -69,3 +69,6 @@ end
 local function init_encoding()
     module.database:exec([[PRAGMA encoding = "UTF-8";]]);
 end
+
+-- return module
+return module
