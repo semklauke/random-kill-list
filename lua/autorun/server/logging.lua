@@ -5,7 +5,7 @@
     logging helper
 ]]--
 local module = {}
-module.prefix = "DB ERROR: "
+module.prefix = "[DB ERROR] "
 module.error = {}
 
 function module.out(text)
