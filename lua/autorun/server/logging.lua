@@ -5,22 +5,33 @@
     logging helper
 ]]--
 local module = {}
-module.prefix = "[DB ERROR] "
 module.error = {}
 
+module.prefix = "[RANDOM-KILL-LIST] "
+module.prefix_dberror = "[DB ERROR] "
+module.prefix_error = "[ERROR] "
+
+
 function module.out(text)
-    print("[RANDOM-KILL-LIST] " .. text)
+    print(module.prefix .. text)
 end
 
+function module.error.out(text)
+    module.out(module.prefix_error ..  text)
+end
 
+function module.error.db(text)
+    module.out(module.prefix_dberror ..  text)
+end
 function module.error.statement_create(statement_name, db_errormsg)
-    module.out(module.prefix .. "Statement " .. statement_name .. " not created with error")
+    module.error.db("Statement " .. statement_name .. " not created with error")
     module.out(db_errormsg)
 end
 
 function module.error.statement_execute(statement_name, db_errormsg)
-    module.out(module.prefix .. "Statement " .. statement_name .. " not excuted with error")
+    module.error.db("Statement " .. statement_name .. " not excuted with error")
     module.out(db_errormsg)
 end
+
 
 return module
