@@ -15,13 +15,13 @@ function module.init(database)
         OR name='random_kills' 
         OR name='rounds_played' 
     ]]
-    for row in db:nrows("SELECT name FROM sqlite_master WHERE type='table' AND (" .. tables .. ");") do
+    for row in module.database:nrows("SELECT name FROM sqlite_master WHERE type='table' AND (" .. tables .. ");") do
         needs_init = false
     end
     if needs_init then
-        init_tables()
+        module.init_tables()
     end
-    set_encoding()
+    module.init_encoding()
 end
 
 
@@ -59,14 +59,13 @@ local sql_create_rounds_played = [[
 ]]
 
 -- database init functions -- 
-
-local function init_tables()
+function module.init_tables()
     assert(module.database:exec(sql_create_player))
     assert(module.database:exec(sql_create_random_kills))
     assert(module.database:exec(sql_create_rounds_played))
 end
 
-local function init_encoding()
+function module.init_encoding()
     module.database:exec([[PRAGMA encoding = "UTF-8";]]);
 end
 
