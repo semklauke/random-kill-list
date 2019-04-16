@@ -4,13 +4,7 @@
 
     Main file, starting point
 ]]--
-
-local sqlite3 = require("lsqlite3complete")
-
 local config = include("rkl_config.lua")
-
-local database = assert( sqlite3.open(config.SQLITE_PATH) )
-
 
 -- globals --
 
@@ -38,10 +32,6 @@ local function checkDouble(table, key)
         end
     end
     return false
-end
-
-local function checkDB()
-    return database:isopen()
 end
 
 local function isBotOrNil_Player(p)
@@ -110,112 +100,106 @@ end
 
 -- sqlite setup --
 
-local sqlitesetup = include("rkl_init-database.lua")
-sqlitesetup.init(database)
-logging.out("Database initialised")
+include("rkl_database.lua")
+init_database()
 
 
--- database maniplulation --
+-- sql statments 
 
--- statements 
 local statements = {}
--- :steam (SteamID of player)
-statements.user_select = database:prepare("SELECT rec_id, steam_id, current_nick FROM player WHERE steam_id = :steam;")
-if not statements.user_select then logging.error.statement_create("user_select", database:errmsg()) end
+local t = {
+    player = esc_sql(config.table.player),
+    random_kills = esc_sql(config.table.random_kills),
+    rounds_played = esc_sql(config.table.rounds_played)
+}
 
--- :ply (player_id of player)
-statements.user_register = database:prepare("INSERT INTO rounds_played (player_id) VALUES (:ply);")
-if not statements.user_register then logging.error.statement_create("user_register", database:errmsg()) end
+-- %s (table.player), %s (SteamID of player)
+statements.user_select = "SELECT rec_id, steam_id, current_nick FROM %s WHERE steam_id = %s LIMIT 1;"
+statements.user_select = string.format(statements.user_select, t.player, "%s")
 
--- :steam (SteamID of new player), :nick (current Nickname of new player0)
-statements.user_add = database:prepare("INSERT INTO player (steam_id, current_nick) VALUES (:steam, :nick);")
-if not statements.user_add then logging.error.statement_create("user_add", database:errmsg()) end 
+-- %s (table.rounds_played), %d (player_id of player)
+statements.user_register = "INSERT INTO %s (player_id) VALUES (%d);"
+statements.user_register = string.format(statements.user_register, t.rounds_played, "%d")
 
--- :ply (player_id of player)
-statements.user_update = database:prepare("UPDATE player SET current_nick = :nick WHERE rec_id = :ply;")
-if not statements.user_update then logging.error.statement_create("user_update", database:errmsg()) end
+-- %s (table.player), %s (SteamID of new player), %s (current nickname of new player)
+statements.user_add = "INSERT INTO %s (steam_id, current_nick) VALUES (%s, %s);"
+statements.user_add = string.format(statements.user_add, t.player, "%s", "%s")
 
--- :attacker (SteamID of attacker), :victim (SteamID of victim)
-statements.random_kill_add = database:prepare([[
-    INSERT INTO random_kills (attacker_id, victim_id) VALUES ( 
-    (SELECT rec_id FROM player WHERE steam_id = :attacker),
-    (SELECT rec_id FROM player WHERE steam_id = :victim));
-]])
-if not statements.random_kill_add then logging.error.statement_create("random_kill_add", database:errmsg()) end
+-- %s (table.player), %s (new nickname for player), %d (player_id of player)
+statements.user_update = "UPDATE %s SET current_nick = %s WHERE rec_id = %d;"
+statements.user_update = string.format(statements.user_update, t.player, "%s", "%d")
 
--- attacker_steamid (SteamID of attacker)
-statements.user_random_kills = database:prepare([[
+-- %s (table.random_kills), %s (table.player), %s (SteamID of attacker), 
+-- %s (table.player), %s (SteamID of victim)
+statements.random_kill_add = [[
+    INSERT INTO %s (attacker_id, victim_id) VALUES ( 
+    (SELECT rec_id FROM %s WHERE steam_id = %s),
+    (SELECT rec_id FROM %s WHERE steam_id = %s));
+]]
+statements.random_kill_add = string.format(statements.random_kill_add, t.random_kills, t.player, "%s", t.player, "%s")
+
+-- %s (table.random_kills), %s (table.player), %s (SteamID of attacker)
+statements.user_random_kills = [[
     SELECT COUNT(*) AS kills
-    FROM random_kills 
-    LEFT JOIN player 
-    ON random_kills.attacker_id = player.rec_id 
-    WHERE player.steam_id = :attacker_steamid 
-    GROUP BY random_kills.attacker_id ORDER BY kills DESC
-]])
-if not statements.user_random_kills then logging.error.statement_create("user_random_kills", database:errmsg()) end
+    FROM %s AS rks
+    LEFT JOIN %s AS pl
+    ON rks.attacker_id = pl.rec_id 
+    WHERE pl.steam_id = %s 
+    GROUP BY rks.attacker_id ORDER BY kills;
+]]
+statements.user_random_kills = string.format(statements.user_random_kills, t.random_kills, t.player, "%s")
 
+
+-- database mainpluation
 
 local function db_registerPlayer(ply)
     if isBotOrNil_Player(ply) then return end
 
-    checkDB()
+    local user_select = string.format(statements.user_select, esc(ply:SteamID()))
+    local user_select_return = sql.Query(user_select)
 
-    statements.user_select:bind_names({ steam = ply:SteamID() })
-    local user_select_return = statements.user_select:step() 
-
-    if user_select_return == sqlite3.ROW then
-
-        -- player already in database
-        local data = statements.user_select:get_uvalues()
-        statements.user_update:bind_names({ ply = data.rec_id })
-        if not statements.user_update:step() == sqlite3.DONE then
-            logging.error.statement_execute("user_update", database:errmsg())
-        end
-        statements.user_update:reset()
-        logging.out("register  " .. ply:Nick() .. " (" .. ply:SteamID() .. ")")
-
-    elseif user_select_return == sqlite3.DONE then
-
+    if user_select_return == nil then
         -- player is not in database yet
-        statements.user_add:bind_names({ steam = ply:SteamID(), nick = ply:Nick() })
-        if not statements.user_add:step() == sqlite3.DONE then
-            logging.error.statement_execute("user_add", database:errmsg())
+        local user_add = string.format(statements.user_add, esc(ply:SteamID()), esc(ply:Nick()))
+        if sql.Query(user_add) ~= nil then
+            logging.error.query("user_add", sql.LastError())
         end
-        statements.user_add:reset()
         logging.out("new register  " .. ply:Nick() .. " (" .. ply:SteamID() .. ")")
 
-    else
+    elseif user_select_return == false then
         -- error occured
-        logging.error.statement_execute("user_select", database:errmsg())
-    end
-
-    statements.user_select:reset()
-    
+        logging.error.query("user_select", sql.LastError())        
+    else
+        -- player already in database
+        local rec_id = tonumber(user_select_return[1].rec_id)
+        local user_update = string.format(statements.user_update, esc(ply:Nick()), rec_id)
+        if sql.Query(user_update) ~= nil then
+             logging.error.query("user_update", sql.LastError())
+        end
+        logging.out("register  " .. ply:Nick() .. " (" .. ply:SteamID() .. ")")
+    end    
 end
 
 local function db_addRandomeKill(attacker_steamid, victim_steamid)
     if isBotOrNil_String(attacker_steamid) or isBotOrNil_String(victim_steamid) then return end
 
-    checkDB()
     local msg
 
-    statements.random_kill_add:bind_names({ attacker = attacker_steamid, victim = victim_steamid })
-    if not statements.random_kill_add:step() == sqlite3.DONE then
-        logging.error.statement_execute("random_kill_add", database:errmsg())
+    local random_kill_add = string.format(statements.random_kill_add, esc(attacker_steamid), esc(victim_steamid))
+    if sql.Query(random_kill_add) ~= nil then
+        logging.error.query("random_kill_add", sql.LastError())
     else
-        
-        statements.user_random_kills:bind_names({ attacker_steamid = attacker_steamid })
-        local user_random_kills_return = statements.user_random_kills:step()
-        if user_random_kills_return == sqlite3.ROW then 
-            local kills = statements.user_random_kills:get_uvalues().kills
+        -- successfull added random kill
+        local user_random_kills = string.format(statements.user_random_kills, esc(attacker_steamid))
+        local user_random_kills_return = sql.QueryRow(user_random_kills)
+        if (user_random_kills_return ~= nil) and (user_random_kills_return ~= false) then 
+            local kills = user_random_kills_return.kills
             msg = logging.prefix .. getNickForSteamID(attacker_steamid) .. " now has " .. kills .. " Random Kills!"
         else
-            logging.error.statement_execute("user_random_kills", database:errmsg())
+            logging.error.query("user_random_kills", sql.LastError())
         end
-        statements.user_random_kills:reset()
         logging.out("random kill for " .. getNickForSteamID(attacker_steamid) .. " (killed " .. getNickForSteamID(victim_steamid) .. ")")
     end
-    statements.random_kill_add:reset()
     return msg
 end
 

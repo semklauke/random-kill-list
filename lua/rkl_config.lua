@@ -4,7 +4,15 @@
     
     Global variables and settings
 ]]--
-config = {}
+local config = {}
 
 config.VOTE_PERC = 0.8
 config.SEND_KEY = "SHJKDGKASJDHSKLADG&@%&DSKLJAHLBDKBA<SBD"
+
+config.table = {
+    player = "rkl_player",
+    random_kills = "rkl_player",
+    rounds_played = "rkl_rounds_played"
+}
+
+return config
