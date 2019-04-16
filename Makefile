@@ -1,7 +1,7 @@
 install:
-	rm .gitignore
+	rm -f .gitignore
 	rm -rf .git
-	rm LICENSE
-	rm README.md
-	rm .DS_Store
-	rm Makefile
+	rm -f LICENSE
+	rm -f README.md
+	rm -f .DS_Store
+	rm -f Makefile
