@@ -19,9 +19,8 @@ end
 function init_database()
     logging.out("init database")
     local needs_init = false
-    local tables_sql = string.format("name=%s OR name=%s OR name=%s", esc(config.table.player), esc(config.table.random_kills), esc(config.tables.rounds_played))
-    for sqltable in tables do
-        if not sql.sql.TableExists(sqltable) then
+    for _,sqltable in pairs(config.table) do
+        if not sql.TableExists(sqltable) then
             needs_init = true
             break
         end
@@ -36,7 +35,7 @@ end
 
 -- SQL statments --
 
-local sql_create_player = [[
+sql_create_player = [[
     CREATE TABLE IF NOT EXISTS `%s` (
         `rec_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         `steam_id` VARCHAR NOT NULL DEFAULT '',
@@ -45,7 +44,7 @@ local sql_create_player = [[
 ]]
 sql_create_player = string.format(sql_create_player, esc_sql(config.table.player))
 
-local sql_create_random_kills = [[
+sql_create_random_kills = [[
     CREATE TABLE IF NOT EXISTS `%s` (
         `rec_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         `attacker_id` INTEGER NOT NULL,
@@ -57,7 +56,7 @@ local sql_create_random_kills = [[
 ]]
 sql_create_random_kills = string.format(sql_create_random_kills, esc_sql(config.table.random_kills), esc(config.table.player), esc(config.table.player))
 
-local sql_create_rounds_played = [[
+sql_create_rounds_played = [[
     CREATE TABLE IF NOT EXISTS `%s` (
         `rec_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -69,7 +68,7 @@ sql_create_rounds_played = string.format(sql_create_rounds_played, esc_sql(confi
 
 
 -- database init functions -- 
-local function init_tables()
+function init_tables()
     if sql.Query(sql_create_player) ~= nil then
         logging.error.query("sql_create_player", sql.LastError())
     end
@@ -86,7 +85,7 @@ local function init_tables()
     logging.out(tables.rounds_played ..  " created")
 end
 
-local function init_encoding()
+function init_encoding()
     if sql.Query([[PRAGMA encoding = "UTF-8";]]) ~= nil then
         logging.error.query("PRAGMA encoding = UTF-8;", sql.LastError())
     end
