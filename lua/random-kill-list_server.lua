@@ -7,7 +7,7 @@
 
 local sqlite3 = require("lsqlite3complete")
 
-local config = require("config")
+local config = include("rkl_config.lua")
 
 local database = assert( sqlite3.open(config.SQLITE_PATH) )
 
@@ -23,7 +23,7 @@ local MESSAGES = {}
 
 
 -- logging --
-local logging = require("logging")
+local logging = include("rkl_logging.lua")
 
 -- helper functionn --
 
@@ -110,7 +110,7 @@ end
 
 -- sqlite setup --
 
-local sqlitesetup = require("init-database")
+local sqlitesetup = include("rkl_init-database.lua")
 sqlitesetup.init(database)
 logging.out("Database initialised")
 
