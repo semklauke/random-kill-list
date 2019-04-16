@@ -6,7 +6,7 @@
 ]]--
 
 local config = include("rkl_config.lua")
-local logging = include("rkl_logging")
+local logging = include("rkl_logging.lua")
 
 function esc(unescaped)
     return sql.SQLStr(unescaped, false)

@@ -4,4 +4,4 @@
 
     Loader for all server side files
 ]]--
-include("randome-kill-list_server.lua")
+include("random-kill-list_server.lua")
