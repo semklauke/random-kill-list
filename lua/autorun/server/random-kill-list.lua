@@ -314,7 +314,7 @@ net.Receive("RKL_TraitorVoted", function(len, sendingPlayer)
 end)
 
 
- network setup setup --
+--  network setup setup --
 timer.Simple(11, function()
     --resource.AddFile("/home/steam/Steam/gm/garrysmod/lua/autorun/cl_TheList.lua")
     checkDB()
