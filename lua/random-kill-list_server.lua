@@ -54,7 +54,7 @@ end
 -- network communication to the client --
 
 local function net_openListPanel(ply)
-    net.Start("THELIST_TheListPanel")
+    net.Start("RKL_TheListPanel")
     if ply == nil then
         net.Broadcast()
     else
@@ -63,17 +63,17 @@ local function net_openListPanel(ply)
 end
 
 local function net_askTraitor(ply)
-    net.Start("THELIST_AskTraitor")
+    net.Start("RKL_AskTraitor")
     net.Send(ply)
 end
 
 local function net_askEverybody()
-    net.Start("THELIST_AskEverybody")
+    net.Start("RKL_AskEverybody")
     net.Broadcast()
 end
 
 local function net_finishVoteFor(steamid)
-    net.Start("THELIST_StopVote")
+    net.Start("RKL_StopVote")
     net.WriteString(steamid)
     net.Broadcast()
     --count upvotes
