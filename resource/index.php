@@ -27,14 +27,15 @@
         $alphas = array_merge(range('A', 'Z'), range('a', 'z'));
     
         try {
-            $db = new PDO('sqlite:../randomKillsList.db');
+            $db = new PDO('sqlite:../../../sv.db');
             // {DEBUG}
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
         } catch (PDOException $e) {
             echo $e->getMessage();
         }
     
-        $totalStmt = $db->prepare("SELECT COUNT(*) AS rks, pl.current_nick FROM randome_kills as rk LEFT JOIN player AS pl ON rk.attacker_id = pl.`rec_id` GROUP BY rk.attacker_id ORDER BY rks DESC");
+	$totalStmt = $db->prepare("SELECT COUNT(*) AS rks, pl.current_nick FROM rkl_randome_kills as rk"
+	$totalStmt .= "LEFT JOIN tkl_player AS pl ON rk.attacker_id = pl.`rec_id` GROUP BY rk.attacker_id ORDER BY rks DESC");
     
         $totalStmt->execute();
         while ($totalStat = $totalStmt->fetch(PDO::FETCH_OBJ)) { ?>
@@ -45,8 +46,8 @@
         <?php } echo '</tbody></table>', PHP_EOL;
             $totalStmt->closeCursor();
         
-            $monthQueryString = "SELECT COUNT(*) AS rks, pl.curren_nick, pl.`rec_id` as rec_id FROM randome_kills as rk";
-            $monthQueryString .= "LEFT JOIN player AS pl ON rk.attacker_id = pl.`rec_id` ";
+            $monthQueryString = "SELECT COUNT(*) AS rks, pl.curren_nick, pl.`rec_id` as rec_id FROM rkl_randome_kills as rk";
+            $monthQueryString .= "LEFT JOIN rkl_player AS pl ON rk.attacker_id = pl.`rec_id` ";
             $monthQueryString .= "WHERE strftime('%m', rk.time) = strftime('%m', date('now'))";
             $monthQueryString .= "AND strftime('%y', rk.time) = strftime('%y', date('now')) GROUP BY rk.attacker_id ORDER BY rks DESC";
         
@@ -84,7 +85,7 @@
             <?php 
                 $month2Stmt = $db->prepare($monthQueryString);
                 $month2Stmt->execute();
-                $month2String = "SELECT COUNT(*) AS 'c' FROM rounds_played WHERE player_id = ? ";
+                $month2String = "SELECT COUNT(*) AS 'c' FROM rkl_rounds_played WHERE player_id = ? ";
                 $month2String .= " strftime('%m', date) = strftime('%m', date('now')) strftime('%y', date) = strftime('%y', date('now'))");
                 $roundsStmt = $db->prepare(month2String)
                 while ($monthStat = $month2Stmt->fetch(PDO::FETCH_OBJ)) { ?>
