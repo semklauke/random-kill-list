@@ -33,9 +33,9 @@
         } catch (PDOException $e) {
             echo $e->getMessage();
         }
-    
-	$totalStmt = $db->prepare("SELECT COUNT(*) AS rks, pl.current_nick FROM rkl_randome_kills as rk"
-	$totalStmt .= "LEFT JOIN tkl_player AS pl ON rk.attacker_id = pl.`rec_id` GROUP BY rk.attacker_id ORDER BY rks DESC");
+        $totalQuery = "SELECT COUNT(*) AS rks, pl.current_nick FROM rkl_random_kills as rk ";   
+    $totalQuery .= " LEFT JOIN rkl_player AS pl ON rk.attacker_id = pl.`rec_id` GROUP BY rk.attacker_id ORDER BY rks DESC;";
+    $totalStmt = $db->prepare($totalQuery);
     
         $totalStmt->execute();
         while ($totalStat = $totalStmt->fetch(PDO::FETCH_OBJ)) { ?>
@@ -46,10 +46,10 @@
         <?php } echo '</tbody></table>', PHP_EOL;
             $totalStmt->closeCursor();
         
-            $monthQueryString = "SELECT COUNT(*) AS rks, pl.curren_nick, pl.`rec_id` as rec_id FROM rkl_randome_kills as rk";
+            $monthQueryString = "SELECT COUNT(*) AS rks, pl.current_nick, pl.`rec_id` as rec_id FROM rkl_random_kills as rk ";
             $monthQueryString .= "LEFT JOIN rkl_player AS pl ON rk.attacker_id = pl.`rec_id` ";
-            $monthQueryString .= "WHERE strftime('%m', rk.time) = strftime('%m', date('now'))";
-            $monthQueryString .= "AND strftime('%y', rk.time) = strftime('%y', date('now')) GROUP BY rk.attacker_id ORDER BY rks DESC";
+            $monthQueryString .= "WHERE strftime('%m', rk.time) = strftime('%m', date('now')) ";
+            $monthQueryString .= "AND strftime('%y', rk.time) = strftime('%y', date('now')) GROUP BY rk.attacker_id ORDER BY rks DESC;";
         
             $monthStmt = $db->prepare($monthQueryString);
             $monthStmt->execute();
@@ -85,9 +85,9 @@
             <?php 
                 $month2Stmt = $db->prepare($monthQueryString);
                 $month2Stmt->execute();
-                $month2String = "SELECT COUNT(*) AS 'c' FROM rkl_rounds_played WHERE player_id = ? ";
-                $month2String .= " strftime('%m', date) = strftime('%m', date('now')) strftime('%y', date) = strftime('%y', date('now'))");
-                $roundsStmt = $db->prepare(month2String)
+                $month2String = "SELECT COUNT(*) AS 'c' FROM rkl_rounds_played WHERE player_id = ? AND ";
+        $month2String .= " strftime('%m', date) = strftime('%m', date('now')) AND strftime('%y', date) = strftime('%y', date('now'));";
+                $roundsStmt = $db->prepare($month2String);
                 while ($monthStat = $month2Stmt->fetch(PDO::FETCH_OBJ)) { ?>
                     <tr>
                         <td><?php echo $monthStat->current_nick; ?></td>
