@@ -117,16 +117,16 @@ local t = {
 statements.user_select = "SELECT rec_id, steam_id, current_nick FROM %s WHERE steam_id = %s LIMIT 1;"
 statements.user_select = string.format(statements.user_select, t.player, "%s")
 
--- %s (table.rounds_played), %d (player_id of player)
-statements.user_register = "INSERT INTO %s (player_id) VALUES (%d);"
+-- %s (table.rounds_played), %s (player_id of player)
+statements.user_register = "INSERT INTO %s (player_id) VALUES (%s);"
 statements.user_register = string.format(statements.user_register, t.rounds_played, "%d")
 
 -- %s (table.player), %s (SteamID of new player), %s (current nickname of new player)
 statements.user_add = "INSERT INTO %s (steam_id, current_nick) VALUES (%s, %s);"
 statements.user_add = string.format(statements.user_add, t.player, "%s", "%s")
 
--- %s (table.player), %s (new nickname for player), %d (player_id of player)
-statements.user_update = "UPDATE %s SET current_nick = %s WHERE rec_id = %d;"
+-- %s (table.player), %s (new nickname for player), %s (player_id of player)
+statements.user_update = "UPDATE %s SET current_nick = %s WHERE rec_id = %s;"
 statements.user_update = string.format(statements.user_update, t.player, "%s", "%d")
 
 -- %s (table.random_kills), %s (table.player), %s (SteamID of attacker), 
@@ -301,7 +301,7 @@ end)
 --  network setup setup --
 timer.Simple(11, function()
     --resource.AddFile("/home/steam/Steam/gm/garrysmod/lua/autorun/cl_TheList.lua")
-    checkDB()
+    logging.out("Setting up Network Strings")
     util.AddNetworkString("RKL_StopVote")
     util.AddNetworkString("RKL_TheListPanel")
     util.AddNetworkString("RKL_TraitorVoted")

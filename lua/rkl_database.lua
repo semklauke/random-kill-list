@@ -72,17 +72,17 @@ function init_tables()
     if sql.Query(sql_create_player) ~= nil then
         logging.error.query("sql_create_player", sql.LastError())
     end
-    logging.out(tables.player ..  " created")
+    logging.out(config.table.player ..  " created")
 
     if sql.Query(sql_create_random_kills) ~= nil then
         logging.error.query("sql_create_random_kills", sql.LastError())
     end
-    logging.out(tables.random_kills ..  " created")
+    logging.out(config.table.random_kills ..  " created")
 
     if sql.Query(sql_create_rounds_played) ~= nil then
         logging.error.query("sql_create_rounds_played", sql.LastError())
     end
-    logging.out(tables.rounds_played ..  " created")
+    logging.out(config.table.rounds_played ..  " created")
 end
 
 function init_encoding()
