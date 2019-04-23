@@ -1,12 +1,17 @@
-local SEND_KEY = "SHJKDGKASJDHSKLADG&@%&DSKLJAHLBDKBA<SBD"
 
-local TITLE = "RANDOM KILL LIST"
+-- make changes here
+local config = {
+    SEND_KEY = "SHJKDGKASJDHSKLADG&@%&DSKLJAHLBDKBA<SBD",
+    title = "RANDOM KILL LIST",
+    webaddress = "http://rkl.semklauke.de"
+}
+
 local voteFrame = {}
 
 local function sendTraitorVote(vote)
     if type(vote) == "boolean" then
         net.Start("RKL_TraitorVoted")
-        net.WriteString(SEND_KEY)
+        net.WriteString(config.SEND_KEY)
         net.WriteBool(vote)
         net.SendToServer()
     end
@@ -15,7 +20,7 @@ end
 local function sendUserVote(vote, steamid)
     if type(vote) == "boolean" then
         net.Start("RKL_UserVoted")
-        net.WriteString(SEND_KEY)
+        net.WriteString(config.SEND_KEY)
         net.WriteString(steamid)
         net.WriteBool(vote)
         net.SendToServer()
@@ -26,14 +31,14 @@ local function showTheListPanel()
 
     local frame = vgui.Create( "DFrame" )
     frame:SetSize( 330, 600 )
-    frame:SetTitle(TITLE)
+    frame:SetTitle(config.title)
     frame:SetVisible( true )
     frame:SetDraggable( true )
     frame:Center()
     --Fill the form with a html page
     local html = vgui.Create( "DHTML" , frame )
     html:Dock( FILL )
-    html:OpenURL("http://rkl.semklauke.de")
+    html:OpenURL(config.webaddress)
 
     html:SetAllowLua( true )
 
@@ -44,7 +49,7 @@ local function showTraitorVoteMenu()
     local frame = vgui.Create("DFrame")
     frame:SetSize(210, 90)
     frame:SetPos( ScrW() * 0.1, ScrH() * 0.3)
-    frame:SetTitle(TITLE)
+    frame:SetTitle(config.title)
     frame:SetVisible(true)
     frame:SetDraggable(true)
     frame:ShowCloseButton(false)
@@ -91,7 +96,7 @@ local function showUserVoteMenu(victim, steamid)
     voteFrame[steamid] = vgui.Create("DFrame")
     voteFrame[steamid]:SetSize(250, 90)
     voteFrame[steamid]:SetPos( ScrW() * 0.1, ScrH() * 0.4)
-    voteFrame[steamid]:SetTitle(TITLE)
+    voteFrame[steamid]:SetTitle(config.title)
     voteFrame[steamid]:SetVisible(true)
     voteFrame[steamid]:SetDraggable(true)
     voteFrame[steamid]:ShowCloseButton(false)

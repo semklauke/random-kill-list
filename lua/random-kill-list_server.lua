@@ -181,6 +181,7 @@ local function db_registerPlayer(ply)
 end
 
 local function db_addRandomeKill(attacker_steamid, victim_steamid)
+    logging.out(attacker_steamid .. " killed " .. victim_steamid)
     if isBotOrNil_String(attacker_steamid) or isBotOrNil_String(victim_steamid) then return end
 
     local msg
@@ -282,14 +283,14 @@ end)
 -- network recives
 
 net.Receive("RKL_TraitorVoted", function(len, sendingPlayer)
-    if net.ReadString() == SEND_KEY then
+    if net.ReadString() == config.SEND_KEY then
         if net.ReadBool() == true then
             logging.out("Traitor " .. sendingPlayer:Nick() .. " voted YES")
             local msg = logging.prefix .. sendingPlayer:Nick() .. " has scheduled a RandomKill Vote as Traitor"
             table.insert(MESSAGES, text)
             TRAITORS[sendingPlayer:SteamID()] = sendingPlayer:Nick()
             VOTES[sendingPlayer:SteamID()] = {}
-            VOTE_COUNTS[sendingPlayer:SteamID()] = player.GetHumans()
+            VOTE_COUNTS[sendingPlayer:SteamID()] = player:GetHumans()
         else 
             logging.out("Traitor " .. sendingPlayer:Nick() .. " voted NO")
             TRAITOR_KILLERS[sendingPlayer:SteamID()] = nil
